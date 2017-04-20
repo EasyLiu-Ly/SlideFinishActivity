@@ -15,10 +15,10 @@ import android.widget.ImageView;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SlideFinishActivity extends BaseAbsActivity {
+public class SlideFinishActivity extends BaseSlideFinishActivity {
   private ViewPager mViewPager;
   private InnerAdapter mAdapter;
-  private static final int[] COLORS = { Color.BLUE, Color.CYAN, Color.GREEN, Color.RED };
+  private static final int[] COLORS = { Color.MAGENTA, Color.CYAN, Color.GREEN, Color.RED };
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
