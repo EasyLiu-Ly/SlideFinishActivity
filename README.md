@@ -8,7 +8,7 @@
 * 解决了滑动冲突问题，例如上图中Activity当中就包含了ViewPager，解决了和ViewPager的滑动冲突问题
 
 ### 使用方式如下：
-* 自定义的Activity继承自BaseAbsActivity
+* 自定义的Activity继承自BaseSlideFinishActivity
 * 自定义的Activity的主题需要包含以下两个属性
 ``` xml
  <item name="android:windowIsTranslucent">true</item>
