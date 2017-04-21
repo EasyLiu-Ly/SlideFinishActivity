@@ -56,17 +56,9 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         ALL   //全部
     }
 
-    private static final Interpolator sInterpolator = new Interpolator() {
-        @Override
-        public float getInterpolation(float t) {
-            t -= 1.0f;
-            return t * t * t * t * t + 1.0f;
-        }
-    };
-
     public SlideFinishRelativeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mScroller = new Scroller(context, sInterpolator);
+        mScroller = new Scroller(context, new AccelerateDecelerateInterpolator());
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
@@ -128,7 +120,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                 int moveY = (int) ev.getRawY();
                 int deltaX = moveX - mLastX;
                 int deltaY = moveY - mLastY;
-                if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX) * 0.5) {
+                if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
                     mIsBeingDraging = true;//初始化为拦截
                     requestParentDisallowInterceptTouchEvent(true);
                     if (mSlideMode == SlideMode.EDGD) {
@@ -221,7 +213,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                 mLastX = moveX;
                 mLastY = moveY;
                 //滑动距离
-                if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX) * 0.5) {
+                if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
                     mSlideValid = !(mSlideMode == SlideMode.EDGD && mDownX > mSlideEdgeXMax);
                 }
                 if (mSlideValid) {
