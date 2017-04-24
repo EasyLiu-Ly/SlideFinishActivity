@@ -41,6 +41,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     private int mSlideEdgeXMax; //边界滑动的时候落点X轴坐标的最大值
     private boolean mSlideValid;//滑动是否有效
     private boolean mIsBeingDraging;//是否正在拖动，用于事件拦截
+    private boolean mIsSlideEnable; //是否使能滑动
     private int mActivePointerId = INVALID_POINTER;
     private static final int INVALID_POINTER = -1;
     private static final float TIME_FRACTION_LEFT = (float) 1.4;
@@ -68,6 +69,11 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         mSlideEdgeXMax =
                 (int) (context.getResources().getDisplayMetrics().widthPixels * EDGE_DOWN_X_MAX_PARTITION);
         mSlideValid = false;
+        mIsSlideEnable = true;
+    }
+
+    public void setSlideEnable(boolean slideEnable) {
+        mIsSlideEnable = slideEnable;
     }
 
     public void setSlideMode(SlideMode slideMode) {
@@ -98,6 +104,10 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
+        //如果不使能就不拦截
+        if (!mIsSlideEnable) {
+            return false;
+        }
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
             // 如果这个触摸被取消了，或者手指抬起来了就不拦截
             mIsBeingDraging = false;
@@ -190,6 +200,10 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        //如果不使能就不响应
+        if (!mIsSlideEnable) {
+            return false;
+        }
         if (mVelocityTracker == null) {
             mVelocityTracker = VelocityTracker.obtain();
         }
