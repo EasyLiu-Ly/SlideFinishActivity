@@ -10,7 +10,7 @@ import android.view.ViewStub;
 /**
  * 需要有SlideFinish效果的Activity继承自这个自Activity即可
  */
-public abstract class BaseSlideFinishActivity extends AppCompatActivity {
+public abstract class BaseSlideFinishActivity extends AppCompatActivity implements SlideFinishRelativeLayout.IOnSlideToFinish {
     private SlideFinishRelativeLayout mSlideFinishRelativeLayout;
     private boolean mIsOpenSlideFinish;
     private SlideFinishRelativeLayout.SlideMode mSlideMode;
@@ -32,13 +32,7 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity {
             View viewRoot = LayoutInflater.from(this).inflate(R.layout.activity_base, null);
             mSlideFinishRelativeLayout =
                     (SlideFinishRelativeLayout) viewRoot.findViewById(R.id.layout_root);
-            mSlideFinishRelativeLayout.setOnSildeToFinishListener(
-                    new SlideFinishRelativeLayout.IOnSlideToFinish() {
-                        @Override
-                        public void onFinish() {
-                            BaseSlideFinishActivity.this.finish();
-                        }
-                    });
+            mSlideFinishRelativeLayout.setOnSildeToFinishListener(this);
             mSlideFinishRelativeLayout.setSlideMode(mSlideMode);
             mSlideFinishRelativeLayout.setSlideEnable(mIsOpenSlideFinish);
             ViewStub viewStub = (ViewStub) viewRoot.findViewById(R.id.layout_content);
@@ -75,5 +69,10 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity {
         if (mSlideFinishRelativeLayout != null) {
             mSlideFinishRelativeLayout.setSlideEnable(isOpenSlideFinish);
         }
+    }
+
+    @Override
+    public void onFinish() {
+        finish();
     }
 }
