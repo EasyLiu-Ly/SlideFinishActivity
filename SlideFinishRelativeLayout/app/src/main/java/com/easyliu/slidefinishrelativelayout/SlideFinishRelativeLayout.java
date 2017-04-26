@@ -22,7 +22,7 @@ import android.widget.Scroller;
 
 public class SlideFinishRelativeLayout extends RelativeLayout {
     private static final String TAG = SlideFinishRelativeLayout.class.getSimpleName();
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private IOnSlideToFinish mOnSlideToFinish;
     private VelocityTracker mVelocityTracker;
     private int mSlideFinishVelocity;//滑动finish的速度，当大于等于这个速度的时候不管是否滑动到有效距离，直接finish
@@ -38,7 +38,6 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     private boolean mIsOriginal;//是不是在初始位置
     private SlideMode mSlideMode;//滑动模式
     private int mSlideEdgeXMax; //边界滑动的时候落点X轴坐标的最大值
-    private boolean mSlideValid;//滑动是否有效
     private boolean mIsBeingDraging;//是否正在拖动，用于事件拦截
     private boolean mIsSlideEnable; //是否使能滑动
     private int mActivePointerId = INVALID_POINTER;
@@ -67,7 +66,6 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         mSlideMode = SlideMode.EDGD;
         mSlideEdgeXMax =
                 (int) (context.getResources().getDisplayMetrics().widthPixels * EDGE_DOWN_X_MAX_PARTITION);
-        mSlideValid = false;
         mIsSlideEnable = true;
     }
 
@@ -109,7 +107,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         }
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP) {
             // 如果这个触摸被取消了，或者手指抬起来了就不拦截
-            mIsBeingDraging = false;
+            resetTouchState();
             return false;
         }
         //正在拖动且不是ACTION_DOWN事件，就拦截
@@ -121,12 +119,16 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                 mDownX = (int) ev.getRawX();
                 mLastX = mDownX;
                 mLastY = (int) ev.getRawY();
-                mIsBeingDraging = false;
+                mIsBeingDraging = false;//在Action_down的时候不拦截，如果拦截的话，接下来的up和cancel事件都是交给自身处理，
+                // 子View就收不到事件了,且接下来onIntercept方法都不会再调用了
                 mActivePointerId = ev.getPointerId(0);
+                if (DEBUG)
+                    Log.d(TAG, "Intercept Action_Down mLastX=:" + mLastX + " mLastY=:" + mLastY);
                 break;
             case MotionEvent.ACTION_MOVE:
                 int moveX = (int) ev.getRawX();
                 int moveY = (int) ev.getRawY();
+                if (DEBUG) Log.d(TAG, "Intercept Action_MOVE moveX=:" + moveX + " moveY=:" + moveY);
                 int deltaX = moveX - mLastX;
                 int deltaY = moveY - mLastY;
                 if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
@@ -197,6 +199,16 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         return checkV && ViewCompat.canScrollHorizontally(v, -dx);
     }
 
+    private void resetTouchState() {
+        if ((mScroller != null) && !mScroller.isFinished()) {
+            mScroller.abortAnimation();
+        }
+        releaseVelocityTracker();
+        mIsBeingDraging = false;
+        mIsFinishing = false;
+        mIsOriginal = true;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //如果不使能就不响应
@@ -209,34 +221,35 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         mVelocityTracker.addMovement(event);
         switch (event.getAction() & MotionEventCompat.ACTION_MASK) {
             case MotionEvent.ACTION_DOWN: {
-                mScroller.abortAnimation();
-                mSlideValid = false;
-                mIsFinishing = false;
-                mIsOriginal = true;
                 mLastX = mDownX = (int) event.getRawX();
                 mLastY = (int) event.getRawY();
                 mActivePointerId = event.getPointerId(0);
+                if (DEBUG) Log.d(TAG, "Action_Down mLastX=:" + mLastX + " mLastY=:" + mLastY);
                 break;
             }
             case MotionEvent.ACTION_MOVE:
                 int moveX = (int) event.getRawX();
                 int moveY = (int) event.getRawY();
+                if (DEBUG) Log.d(TAG, "Action_MOVE moveX=:" + moveX + " moveY=:" + moveY);
                 int deltaX = moveX - mLastX;
                 int deltaY = moveY - mLastY;
                 mLastX = moveX;
                 mLastY = moveY;
-                //滑动距离
-                if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
-                    mSlideValid = !(mSlideMode == SlideMode.EDGD && mDownX > mSlideEdgeXMax);
+                //特殊情况：当没有子类或者有子类但是没有响应事件的时候，
+                //onIntercept只会在Action_Down的时候才会调用，此时mIsBeingDraging就为false
+                if (!mIsBeingDraging) {
+                    if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
+                        mIsBeingDraging = true;
+                    }
                 }
-                if (mSlideValid) {
+                if (mIsBeingDraging) {
                     if (deltaX > 0) {//往右
                         final VelocityTracker velocityTracker = mVelocityTracker;
                         velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
                         float xVelocity = VelocityTrackerCompat.getXVelocity(velocityTracker, mActivePointerId);//得到x方向的速度
                         if (xVelocity >= mSlideFinishVelocity) {
                             mIsFinishing = true;
-                            mSlideValid = false;//防止下面的ACTION_UP里面的代码再次调用
+                            mIsBeingDraging = false;//防止下面的ACTION_UP里面的代码再次调用
                             scrollToFinishImmediately();   //大于某一个速度,直接finish
                             if (DEBUG) Log.d(TAG, "scrollToFinishImmediately");
                             break;
@@ -247,19 +260,19 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                         //往左
                         if (!mIsOriginal) {
                             //最多到最左边
-                            if (mParentView.getScrollX() <= 0) {
-                                mParentView.scrollBy(-deltaX, 0);
+                            int currentScrollX = mParentView.getScrollX();
+                            if (currentScrollX <= 0) {
+                                int delta = currentScrollX - deltaX > 0 ? 0 : -deltaX;
+                                mParentView.scrollBy(delta, 0);
                             }
                         }
                     }
                 }
                 break;
             case MotionEvent.ACTION_CANCEL:
-                releaseVelocityTracker();
-                break;
             case MotionEvent.ACTION_UP:
-                releaseVelocityTracker();
-                if (mSlideValid) {
+                if (mIsBeingDraging) {
+                    mIsBeingDraging = false;
                     if (mParentView.getScrollX() <= (int) (-mWidth * SLIDE_FINISH_PARTITION)) {
                         mIsFinishing = true;
                         scrollToFinish();
