@@ -42,10 +42,10 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     private boolean mIsSlideEnable; //是否使能滑动
     private int mActivePointerId = INVALID_POINTER;
     private static final int INVALID_POINTER = -1;
-    private static final float TIME_FRACTION_LEFT = (float) 1.4;
+    private static final float TIME_FRACTION_LEFT = (float) 1.5;
     private static final float TIME_FRACTION_RIGHT = (float) 0.4;
     private static final float TIME_FRACTION_RIGHT_IMMEDIATELY = (float) 0.15;
-    private static final float SLIDE_FINISH_PARTITION = (float) (1 / 3.0);
+    private static final float SLIDE_FINISH_PARTITION = (float) (1/ 2.0);
     private static final float EDGE_DOWN_X_MAX_PARTITION = (float) 1 / 10;
     private static final int DEFAULT_MINIMUM_SLIDE_FINISH_VELOCITY = 5000;//最小的滑动finish速度,单位为pix/s
 
@@ -57,7 +57,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
 
     public SlideFinishRelativeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mScroller = new Scroller(context, new AccelerateDecelerateInterpolator());
+        mScroller = new Scroller(context);
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
