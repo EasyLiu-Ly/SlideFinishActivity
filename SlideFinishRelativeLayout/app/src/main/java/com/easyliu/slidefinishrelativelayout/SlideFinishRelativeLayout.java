@@ -47,7 +47,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     private static final float TIME_FRACTION_RIGHT_IMMEDIATELY = (float) 0.15;
     private static final float SLIDE_FINISH_PARTITION = (float) (1 / 3.0);
     private static final float EDGE_DOWN_X_MAX_PARTITION = (float) 1 / 10;
-    private static final int DEFAULT_MINIMUM_SLIDE_FINISH_VELOCITY = 3000;//最小的滑动finish速度,单位为pix/s
+    private static final int DEFAULT_MINIMUM_SLIDE_FINISH_VELOCITY = 5000;//最小的滑动finish速度,单位为pix/s
 
     //滑动模式
     public enum SlideMode {
@@ -93,6 +93,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         } else {
             //滑动完成，判断是否需要finish
             if (mOnSlideToFinish != null && mIsFinishing) {
+                mIsFinishing = false;
                 mOnSlideToFinish.onFinish();
             }
         }
@@ -124,6 +125,11 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                 mActivePointerId = ev.getPointerId(0);
                 if (DEBUG)
                     Log.d(TAG, "Intercept Action_Down mLastX=:" + mLastX + " mLastY=:" + mLastY);
+                //开始事件分发的时候，判断动画是否结束
+                if ((mScroller != null) && !mScroller.isFinished()) {
+                    mScroller.abortAnimation();
+                    mIsBeingDraging = true;
+                }
                 break;
             case MotionEvent.ACTION_MOVE:
                 int moveX = (int) ev.getRawX();
@@ -140,6 +146,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                         }
                     } else {//不是边界滑动的时候，需要考虑到滑动冲突
                         if (deltaX != 0 && canScroll(this, false, deltaX, moveX, moveY)) {
+                            if (DEBUG) Log.d(TAG, "child view can scroll,not intercept event");
                             mIsBeingDraging = false;
                         }
                     }
@@ -200,12 +207,8 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     }
 
     private void resetTouchState() {
-        if ((mScroller != null) && !mScroller.isFinished()) {
-            mScroller.abortAnimation();
-        }
         releaseVelocityTracker();
         mIsBeingDraging = false;
-        mIsFinishing = false;
         mIsOriginal = true;
     }
 
@@ -228,42 +231,54 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                 break;
             }
             case MotionEvent.ACTION_MOVE:
-                int moveX = (int) event.getRawX();
-                int moveY = (int) event.getRawY();
-                if (DEBUG) Log.d(TAG, "Action_MOVE moveX=:" + moveX + " moveY=:" + moveY);
-                int deltaX = moveX - mLastX;
-                int deltaY = moveY - mLastY;
-                mLastX = moveX;
-                mLastY = moveY;
-                //特殊情况：当没有子类或者有子类但是没有响应事件的时候，
-                //onIntercept只会在Action_Down的时候才会调用，此时mIsBeingDraging就为false
-                if (!mIsBeingDraging) {
-                    if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
-                        mIsBeingDraging = true;
-                    }
-                }
-                if (mIsBeingDraging) {
-                    if (deltaX > 0) {//往右
-                        final VelocityTracker velocityTracker = mVelocityTracker;
-                        velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
-                        float xVelocity = VelocityTrackerCompat.getXVelocity(velocityTracker, mActivePointerId);//得到x方向的速度
-                        if (xVelocity >= mSlideFinishVelocity) {
-                            mIsFinishing = true;
-                            mIsBeingDraging = false;//防止下面的ACTION_UP里面的代码再次调用
-                            scrollToFinishImmediately();   //大于某一个速度,直接finish
-                            if (DEBUG) Log.d(TAG, "scrollToFinishImmediately");
-                            break;
+                if (!mIsFinishing) {//在这里需要判断mIsFinishing，防止速度很快的时候scrollToFinishImmediately多次调用
+                    int moveX = (int) event.getRawX();
+                    int moveY = (int) event.getRawY();
+                    if (DEBUG) Log.d(TAG, "Action_MOVE moveX=:" + moveX + " moveY=:" + moveY);
+                    int deltaX = moveX - mLastX;
+                    int deltaY = moveY - mLastY;
+                    mLastX = moveX;
+                    mLastY = moveY;
+                    //特殊情况：当没有子类或者有子类但是没有响应事件的时候，
+                    //onIntercept只会在Action_Down的时候才会调用，此时mIsBeingDraging就为false
+                    if (!mIsBeingDraging) {
+                        if (Math.abs(deltaX) > mTouchSlop && Math.abs(deltaY) < Math.abs(deltaX)) {
+                            mIsBeingDraging = true;
+                            requestParentDisallowInterceptTouchEvent(true);
+                            if (mSlideMode == SlideMode.EDGD) {
+                                if (mDownX > mSlideEdgeXMax) {
+                                    mIsBeingDraging = false;
+                                }
+                            } else {//不是边界滑动的时候，需要考虑到滑动冲突
+                                if (deltaX != 0 && canScroll(this, false, deltaX, moveX, moveY)) {
+                                    mIsBeingDraging = false;
+                                }
+                            }
                         }
-                        mParentView.scrollBy(-deltaX, 0);
-                        mIsOriginal = false;
-                    } else {
-                        //往左
-                        if (!mIsOriginal) {
-                            //最多到最左边
-                            int currentScrollX = mParentView.getScrollX();
-                            if (currentScrollX <= 0) {
-                                int delta = currentScrollX - deltaX > 0 ? 0 : -deltaX;
-                                mParentView.scrollBy(delta, 0);
+                    }
+                    if (mIsBeingDraging) {
+                        if (deltaX > 0) {//往右
+                            final VelocityTracker velocityTracker = mVelocityTracker;
+                            velocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
+                            float xVelocity = VelocityTrackerCompat.getXVelocity(velocityTracker, mActivePointerId);//得到x方向的速度
+                            if (xVelocity >= mSlideFinishVelocity) {
+                                mIsFinishing = true;
+                                mIsBeingDraging = false;//防止下面的ACTION_UP里面的代码再次调用
+                                scrollToFinishImmediately();   //大于某一个速度,直接finish
+                                if (DEBUG) Log.d(TAG, "scrollToFinishImmediately");
+                                return true;//直接返回
+                            }
+                            mParentView.scrollBy(-deltaX, 0);
+                            mIsOriginal = false;
+                        } else {
+                            //往左
+                            if (!mIsOriginal) {
+                                //最多到最左边
+                                int currentScrollX = mParentView.getScrollX();
+                                if (currentScrollX <= 0) {
+                                    int delta = currentScrollX - deltaX > 0 ? 0 : -deltaX;
+                                    mParentView.scrollBy(delta, 0);
+                                }
                             }
                         }
                     }
