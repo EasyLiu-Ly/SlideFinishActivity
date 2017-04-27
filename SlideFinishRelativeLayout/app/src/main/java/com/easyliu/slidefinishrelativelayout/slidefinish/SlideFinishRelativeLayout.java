@@ -1,4 +1,4 @@
-package com.easyliu.slidefinishrelativelayout;
+package com.easyliu.slidefinishrelativelayout.slidefinish;
 
 import android.content.Context;
 import android.support.v4.view.MotionEventCompat;
@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
-import android.view.animation.AccelerateDecelerateInterpolator;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
@@ -77,7 +76,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         mSlideMode = slideMode != null ? slideMode : SlideMode.EDGD;
     }
 
-    public void setOnSildeToFinishListener(IOnSlideToFinish onSlideToFinish) {
+    public void setOnSlideToFinishListener(IOnSlideToFinish onSlideToFinish) {
         this.mOnSlideToFinish = onSlideToFinish;
     }
 

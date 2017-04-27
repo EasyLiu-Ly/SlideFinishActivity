@@ -1,4 +1,4 @@
-package com.easyliu.slidefinishrelativelayout;
+package com.easyliu.slidefinishrelativelayout.activity;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -12,6 +12,10 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
+
+import com.easyliu.slidefinishrelativelayout.R;
+import com.easyliu.slidefinishrelativelayout.slidefinish.BaseSlideFinishActivity;
+import com.easyliu.slidefinishrelativelayout.slidefinish.SlideFinishRelativeLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;

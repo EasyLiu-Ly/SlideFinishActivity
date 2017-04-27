@@ -1,4 +1,4 @@
-package com.easyliu.slidefinishrelativelayout;
+package com.easyliu.slidefinishrelativelayout.slidefinish;
 
 import android.support.annotation.LayoutRes;
 import android.support.v7.app.AppCompatActivity;
@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewStub;
+
+import com.easyliu.slidefinishrelativelayout.R;
 
 /**
  * 需要有SlideFinish效果的Activity继承自这个自Activity即可
@@ -32,7 +34,7 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity implemen
             View viewRoot = LayoutInflater.from(this).inflate(R.layout.activity_base, null);
             mSlideFinishRelativeLayout =
                     (SlideFinishRelativeLayout) viewRoot.findViewById(R.id.layout_root);
-            mSlideFinishRelativeLayout.setOnSildeToFinishListener(this);
+            mSlideFinishRelativeLayout.setOnSlideToFinishListener(this);
             mSlideFinishRelativeLayout.setSlideMode(mSlideMode);
             mSlideFinishRelativeLayout.setSlideEnable(mIsOpenSlideFinish);
             ViewStub viewStub = (ViewStub) viewRoot.findViewById(R.id.layout_content);
