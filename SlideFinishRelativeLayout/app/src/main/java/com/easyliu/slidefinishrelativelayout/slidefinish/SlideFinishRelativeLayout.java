@@ -353,7 +353,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     /**
      * 立即结束
      */
-    private void scrollToFinishImmediately() {
+    public void scrollToFinishImmediately() {
         int deltaX = -(mParentView.getScrollX() + mWidth);
         mScroller.startScroll(mParentView.getScrollX(), 0, deltaX + 1, 0,
                 (int) (-deltaX * TIME_FRACTION_RIGHT_IMMEDIATELY));
