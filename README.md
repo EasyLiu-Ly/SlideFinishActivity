@@ -1,5 +1,5 @@
 # SlideFinishActivity
-让Activity跟随者手指的滑动而滑动，当向右滑动到一定距离或者往右滑动到达一定速度就finsih，类似于微信滑动finish的效果。
+让Activity跟随者手指的滑动而滑动，当向右滑动到一定距离或者往右滑动到达一定速度就finish，类似于微信滑动finish的效果。
 
 ## 达到的效果如下：
 ![演示动图](https://github.com/EasyLiu-Ly/SlideFinishActivity/blob/master/SlideFinishActivity.gif)
