@@ -32,7 +32,7 @@ public class SlideFinishActivity extends BaseSlideFinishActivity {
         setContentView(R.layout.activity_slide_finish);
         initStatusBar();
         initView();
-        setSlideMode(SlideFinishRelativeLayout.SlideMode.EDGD);
+        setSlideMode(SlideFinishRelativeLayout.SlideMode.ALL);
         enableSlideFinish(true);
         mViewPager.setVisibility(View.VISIBLE);
     }

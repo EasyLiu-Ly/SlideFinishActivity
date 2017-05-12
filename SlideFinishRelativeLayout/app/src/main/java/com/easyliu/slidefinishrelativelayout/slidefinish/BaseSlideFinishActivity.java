@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewStub;
 
 import com.easyliu.slidefinishrelativelayout.R;
@@ -17,6 +18,7 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity
     private SlideFinishRelativeLayout mSlideFinishRelativeLayout;
     private boolean mIsOpenSlideFinish;
     private SlideFinishRelativeLayout.SlideMode mSlideMode;
+    private ViewGroup mSlideView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +28,7 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity
 
     private void init() {
         mIsOpenSlideFinish = true;
-        mSlideMode = SlideFinishRelativeLayout.SlideMode.EDGD;
+        mSlideMode = SlideFinishRelativeLayout.SlideMode.ALL;
     }
 
     @Override
@@ -39,6 +41,14 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity
             mSlideFinishRelativeLayout.setSlideMode(mSlideMode);
             mSlideFinishRelativeLayout.setSlideEnable(mIsOpenSlideFinish);
             mSlideFinishRelativeLayout.setOnSlideFinishChangeListener(this);
+            mSlideFinishRelativeLayout.post(new Runnable() {
+                @Override
+                public void run() {
+                    mSlideView = mSlideFinishRelativeLayout.getSlideView();
+                    mSlideView.setPivotX(mSlideView.getWidth() / 2);
+                    mSlideView.setPivotY(mSlideView.getHeight());
+                }
+            });
             ViewStub viewStub = (ViewStub) viewRoot.findViewById(R.id.layout_content);
             viewStub.setLayoutResource(layoutResID);
             viewStub.inflate();
@@ -71,6 +81,10 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity
         }
     }
 
+    protected ViewGroup getSlideView() {
+        return mSlideView;
+    }
+
     protected void setOnSlideFinishChangeListener(SlideFinishRelativeLayout.IOnSlideFinishChangeListener onSlideFinishChangeListener) {
         mSlideFinishRelativeLayout.setOnSlideFinishChangeListener(onSlideFinishChangeListener);
     }
@@ -90,6 +104,6 @@ public abstract class BaseSlideFinishActivity extends AppCompatActivity
 
     @Override
     public void onSlideFinishChange(View slideView, float slidePercent) {
-
+        slideView.setRotation(30 * slidePercent);
     }
 }

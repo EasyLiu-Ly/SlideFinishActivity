@@ -13,6 +13,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.ViewTreeObserver;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
@@ -42,7 +43,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     private boolean mIsSlideEnable; //是否使能滑动
     private int mActivePointerId = INVALID_POINTER;
     private static final int INVALID_POINTER = -1;
-    private static final float TIME_FRACTION_LEFT = (float) 1.5;
+    private static final float TIME_FRACTION_LEFT = (float) 1.0;
     private static final float TIME_FRACTION_RIGHT = (float) 0.4;
     private static final float TIME_FRACTION_RIGHT_IMMEDIATELY = (float) 0.15;
     private static final float SLIDE_FINISH_PARTITION = (float) (1 / 2.0);
@@ -58,7 +59,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
 
     public SlideFinishRelativeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mScroller = new Scroller(context);
+        mScroller = new Scroller(context,new DecelerateInterpolator());
         final ViewConfiguration configuration = ViewConfiguration.get(context);
         mTouchSlop = configuration.getScaledTouchSlop();
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
@@ -68,6 +69,10 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         mSlideEdgeXMax =
                 (int) (context.getResources().getDisplayMetrics().widthPixels * EDGE_DOWN_X_MAX_PARTITION);
         mIsSlideEnable = true;
+    }
+
+    public ViewGroup getSlideView() {
+        return mParentView;
     }
 
     public void setSlideEnable(boolean slideEnable) {
@@ -318,21 +323,25 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
         super.onLayout(changed, l, t, r, b);
         if (changed) {
             mParentView = (ViewGroup) this.getParent();
+            mParentView.getViewTreeObserver().addOnScrollChangedListener(mScrollChangedListener);
             mWidth = this.getWidth();
         }
     }
 
+    private ViewTreeObserver.OnScrollChangedListener mScrollChangedListener = new ViewTreeObserver.OnScrollChangedListener() {
+        @Override
+        public void onScrollChanged() {
+            if (mOnSlideFinishChangeListener != null) {
+                float slidePercent = (float) (Math.abs(mParentView.getScrollX()) * 1.0 / mWidth);
+                Log.d(TAG, "slidePercent=" + slidePercent);
+                mOnSlideFinishChangeListener.onSlideFinishChange(mParentView, slidePercent);
+            }
+        }
+    };
+
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        mParentView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
-            @Override
-            public void onScrollChanged() {
-                if (mOnSlideFinishChangeListener != null) {
-                    mOnSlideFinishChangeListener.onSlideFinishChange(mParentView, Math.abs(mParentView.getScrollX()) / mWidth);
-                }
-            }
-        });
     }
 
     @Override
