@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.view.ViewParent;
+import android.view.ViewTreeObserver;
 import android.widget.RelativeLayout;
 import android.widget.Scroller;
 
@@ -44,9 +45,10 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     private static final float TIME_FRACTION_LEFT = (float) 1.5;
     private static final float TIME_FRACTION_RIGHT = (float) 0.4;
     private static final float TIME_FRACTION_RIGHT_IMMEDIATELY = (float) 0.15;
-    private static final float SLIDE_FINISH_PARTITION = (float) (1/ 2.0);
+    private static final float SLIDE_FINISH_PARTITION = (float) (1 / 2.0);
     private static final float EDGE_DOWN_X_MAX_PARTITION = (float) 1 / 10;
     private static final int DEFAULT_MINIMUM_SLIDE_FINISH_VELOCITY = 5000;//最小的滑动finish速度,单位为pix/s
+    private IOnSlideFinishChangeListener mOnSlideFinishChangeListener;
 
     //滑动模式
     public enum SlideMode {
@@ -77,7 +79,7 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     }
 
     public void setOnSlideToFinishListener(IOnSlideToFinish onSlideToFinish) {
-        this.mOnSlideToFinish = onSlideToFinish;
+        mOnSlideToFinish = onSlideToFinish;
     }
 
     public interface IOnSlideToFinish {
@@ -191,7 +193,6 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
             final int count = group.getChildCount();
             // Count backwards - let topmost views consume scroll distance first.
             for (int i = count - 1; i >= 0; i--) {
-                // TODO: Add versioned support here for transformed views.
                 // This will not work for transformed views in Honeycomb+
                 final View child = group.getChildAt(i);
                 if (x + scrollX >= child.getLeft() && x + scrollX < child.getRight() && y + scrollY >= child
@@ -322,6 +323,19 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mParentView.getViewTreeObserver().addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+            @Override
+            public void onScrollChanged() {
+                if (mOnSlideFinishChangeListener != null) {
+                    mOnSlideFinishChangeListener.onSlideFinishChange(mParentView, Math.abs(mParentView.getScrollX()) / mWidth);
+                }
+            }
+        });
+    }
+
+    @Override
     protected void onDetachedFromWindow() {
         if ((mScroller != null) && !mScroller.isFinished()) {
             mScroller.abortAnimation();
@@ -359,4 +373,19 @@ public class SlideFinishRelativeLayout extends RelativeLayout {
                 (int) (-deltaX * TIME_FRACTION_RIGHT_IMMEDIATELY));
         postInvalidate();
     }
+
+    public interface IOnSlideFinishChangeListener {
+        /**
+         * Called when the scroll position of a view changes.
+         *
+         * @param slideView    滑动的视图
+         * @param slidePercent 滑动的百分比
+         */
+        void onSlideFinishChange(View slideView, float slidePercent);
+    }
+
+    public void setOnSlideFinishChangeListener(IOnSlideFinishChangeListener onSlideFinishChangeListener) {
+        mOnSlideFinishChangeListener = onSlideFinishChangeListener;
+    }
+
 }
