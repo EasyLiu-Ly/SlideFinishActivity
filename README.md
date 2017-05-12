@@ -14,7 +14,7 @@
  <item name="android:windowIsTranslucent">true</item>
  <item name="android:windowBackground">@android:color/transparent</item>
 ```
-### 滑动动画
+### 滑动动画：
 在滑动的时候，可以实现滑动动画效果，如下所示，类似于酷狗播放界面滑动Finish的效果。具体实现查看SlideFinishRelativeLayout中的IOnSlideFinishChangeListener接口，在BaseSlideFinishActivity当中实现了这个接口，在这个接口里面对顶层视图进行rotation操作即可。
 
 ![滑动动画](https://github.com/EasyLiu-Ly/SlideFinishActivity/blob/master/SlideFinishActivity2.gif)
